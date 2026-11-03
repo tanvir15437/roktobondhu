@@ -40,7 +40,7 @@ export default function MyDonationsPage() {
   }
 
   // Filter donations for the current donor
-  const userDonations = donations.filter((d) => d.donorId === user.id || d.donorId === 'usr-101');
+  const userDonations = donations.filter((d) => d.donorId === user.id);
 
   return (
     <div className="py-8 sm:py-12 bg-ui-bg min-h-screen">

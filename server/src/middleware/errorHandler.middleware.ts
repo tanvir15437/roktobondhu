@@ -38,3 +38,4 @@ export const globalErrorHandler = (
 
   errorResponse(res, message, statusCode);
 };
+

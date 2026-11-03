@@ -59,9 +59,9 @@ export default function MyRequestsPage() {
     );
   }
 
-  // Filter requests that belong to user (or demo requester/user)
+  // Filter requests that belong to user
   const myRequests = requests.filter(
-    (req) => req.requesterId === user.id || req.requesterName === user.name || req.id === 'req-001' || req.id === 'req-008'
+    (req) => req.requesterId === user.id || req.requesterName === user.name
   );
 
   const openEdit = (req: BloodRequest) => {

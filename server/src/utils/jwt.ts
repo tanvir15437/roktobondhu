@@ -40,3 +40,4 @@ export const clearAuthCookie = (res: Response): void => {
     path: '/',
   });
 };
+

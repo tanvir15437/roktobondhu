@@ -221,3 +221,4 @@ export const seedInitialData = async (): Promise<void> => {
     console.error('[MongoDB] Error seeding initial data:', err.message);
   }
 };
+

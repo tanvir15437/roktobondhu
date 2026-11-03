@@ -12,11 +12,11 @@ import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
 import { BANGLADESH_DIVISIONS, BLOOD_GROUPS } from '@/data/mockData';
 import { BloodGroup, BangladeshDivision } from '@/types';
-import { Droplets, HeartHandshake, PlusCircle, ArrowRight } from 'lucide-react';
+import { Droplets, HeartHandshake, PlusCircle, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { loginAs, refreshData } = usePlatform();
+  const { register } = usePlatform();
   const { showToast } = useToast();
 
   // User intent choice
@@ -46,9 +46,10 @@ export default function RegisterPage() {
     if (!validate()) return;
 
     setLoading(true);
+    setErrors({});
     try {
-      const emailValue = email.trim() || `${name.toLowerCase().replace(/[^a-z0-9]/g, '')}${Date.now().toString().slice(-4)}@example.com`;
-      const res = await api.auth.register({
+      const emailValue = email.trim() || `${phone.replace(/\D/g, '')}@roktobondhu.org`;
+      const newUser = await register({
         name: name.trim(),
         email: emailValue,
         phone: phone.trim(),
@@ -57,17 +58,13 @@ export default function RegisterPage() {
         division,
         location: division,
         rolePreference: intent,
-      }).catch(() => null);
+      });
 
-      if (res?.user) {
-        showToast('success', 'Registration Successful', `Welcome to RoktoBondhu, ${res.user.name}!`);
-        await refreshData();
-      } else {
-        await loginAs(intent === 'donor' ? 'donor' : 'requester');
-      }
+      showToast('success', 'Registration Successful', `Welcome to RoktoBondhu, ${newUser.name}!`);
       router.push(intent === 'donor' ? '/dashboard' : '/dashboard/my-requests');
     } catch (err: any) {
-      showToast('error', 'Registration Failed', err.message);
+      showToast('error', 'Registration Failed', err.message || 'Could not complete registration.');
+      setErrors({ form: err.message || 'Registration failed' });
     } finally {
       setLoading(false);
     }
@@ -96,6 +93,13 @@ export default function RegisterPage() {
 
         {/* Lightweight Registration Form */}
         <Card className="p-6 sm:p-8 space-y-6">
+          {errors.form && (
+            <div className="p-3 bg-semantic-error-subtle border border-[#F8C8C8] rounded-md flex items-center gap-2 text-12 text-semantic-error">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{errors.form}</span>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Primary Intent Choice */}
             <div>

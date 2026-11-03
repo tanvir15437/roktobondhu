@@ -67,3 +67,4 @@ const DonationSchema = new Schema<IDonation>(
 DonationSchema.index({ donorId: 1, donationDate: -1 });
 
 export const Donation = mongoose.model<IDonation>('Donation', DonationSchema);
+

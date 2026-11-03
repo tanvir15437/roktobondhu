@@ -12,3 +12,4 @@ export const ENV = {
   CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000',
   DEFAULT_ELIGIBILITY_DAYS: parseInt(process.env.ELIGIBILITY_DAYS || '90', 10),
 };
+

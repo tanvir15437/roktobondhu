@@ -49,3 +49,4 @@ export const calculateEligibility = (
     disclaimer: MEDICAL_DISCLAIMER,
   };
 };
+

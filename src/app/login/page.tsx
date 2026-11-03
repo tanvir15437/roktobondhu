@@ -13,42 +13,43 @@ import { Droplets, Lock, Phone, UserCheck, ArrowRight, AlertCircle } from 'lucid
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginAs, refreshData } = usePlatform();
+  const { login, loginAs } = usePlatform();
   const { showToast } = useToast();
-  const [identifier, setIdentifier] = useState('+880 1712-345678');
-  const [password, setPassword] = useState('password123');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!identifier.trim() || !password) {
+      setError('Please enter your phone number or email and password.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
-      const res = await api.auth.login(identifier, password).catch(() => null);
-      if (res?.user) {
-        showToast('success', 'Logged In', `Welcome back, ${res.user.name}!`);
-        await refreshData();
-        router.push('/dashboard');
-      } else {
-        // Fallback for demo
-        await loginAs('donor');
-        router.push('/dashboard');
-      }
+      const loggedUser = await login(identifier.trim(), password);
+      showToast('success', 'Logged In', `Welcome back, ${loggedUser.name}!`);
+      router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Invalid credentials');
-      showToast('error', 'Login Failed', err.message);
+      setError(err.message || 'Invalid email/phone or password.');
+      showToast('error', 'Login Failed', err.message || 'Invalid email/phone or password.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDemoDonor = async () => {
+    setIdentifier('+880 1712-345678');
+    setPassword('password123');
     await loginAs('donor');
     router.push('/dashboard');
   };
 
   const handleDemoRequester = async () => {
+    setIdentifier('+880 1819-234567');
+    setPassword('password123');
     await loginAs('requester');
     router.push('/dashboard/my-requests');
   };

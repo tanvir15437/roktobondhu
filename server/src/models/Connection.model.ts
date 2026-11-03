@@ -62,3 +62,4 @@ const ConnectionSchema = new Schema<IConnection>(
 ConnectionSchema.index({ requestId: 1, donorId: 1 });
 
 export const Connection = mongoose.model<IConnection>('Connection', ConnectionSchema);
+

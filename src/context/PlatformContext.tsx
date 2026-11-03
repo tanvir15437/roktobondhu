@@ -26,6 +26,8 @@ interface PlatformContextType {
   addDonation: (recordData: Omit<DonationRecord, 'id' | 'donorId' | 'verified'>) => Promise<void>;
   updateUserAvailability: (status: 'Available' | 'Unavailable') => Promise<void>;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
+  login: (identifier: string, pass: string) => Promise<UserProfile>;
+  register: (payload: any) => Promise<UserProfile>;
   loginAs: (role: 'donor' | 'requester' | 'guest') => Promise<void>;
   logout: () => Promise<void>;
   contactRequest: (requestId: string, donorName?: string, donorPhone?: string) => Promise<void>;
@@ -74,11 +76,47 @@ const normalizeRequest = (raw: any): BloodRequest => {
   };
 };
 
+const formatUserProfile = (raw: any): UserProfile => {
+  const name = raw.name || 'Anonymous User';
+  const initials = name
+    .split(' ')
+    .filter(Boolean)
+    .map((n: string) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  return {
+    id: raw.id || raw._id?.toString() || 'usr-me',
+    name: raw.name,
+    email: raw.email,
+    phone: raw.phone,
+    bloodGroup: raw.bloodGroup || 'O+',
+    division: raw.division || 'Dhaka',
+    location: raw.location || raw.division || 'Dhaka',
+    dateOfBirth: raw.dateOfBirth || '',
+    age: raw.age || (raw.dateOfBirth ? Math.max(18, new Date().getFullYear() - new Date(raw.dateOfBirth).getFullYear()) : 26),
+    totalDonations: raw.totalDonations ?? 0,
+    lastDonationDate: raw.lastDonationDate || 'Never',
+    nextEligibleDate: raw.nextEligibleDate || 'Eligible to donate',
+    isEligible: raw.isEligible ?? true,
+    availabilityStatus: raw.isAvailable ? 'Available' : 'Unavailable',
+    avatarInitials: initials || 'RB',
+    rolePreference: raw.rolePreference || 'both',
+    settings: raw.settings || {
+      smsUrgentAlerts: true,
+      emailDigest: false,
+      hidePhoneUntilContact: false,
+      showInDonorDirectory: true,
+    },
+  };
+};
+
 export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { showToast } = useToast();
-  const [user, setUser] = useState<UserProfile | null>(INITIAL_USER);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [requests, setRequests] = useState<BloodRequest[]>(INITIAL_REQUESTS);
-  const [donations, setDonations] = useState<DonationRecord[]>(INITIAL_DONATIONS);
+  const [donations, setDonations] = useState<DonationRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Global Modals
@@ -91,7 +129,7 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       // 1. Fetch live requests
       const reqRes = await api.requests.getAll().catch(() => null);
-      if (reqRes?.requests && Array.isArray(reqRes.requests)) {
+      if (reqRes?.requests && Array.isArray(reqRes.requests) && reqRes.requests.length > 0) {
         const normalized = reqRes.requests.map(normalizeRequest);
         setRequests(normalized);
       }
@@ -99,33 +137,34 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // 2. Fetch active session
       const meRes = await api.auth.me().catch(() => null);
       if (meRes?.user) {
-        setUser({
-          ...meRes.user,
-          avatarInitials: meRes.user.name.slice(0, 2).toUpperCase(),
-          availabilityStatus: meRes.user.isAvailable ? 'Available' : 'Unavailable',
-          rolePreference: 'both',
-        });
-      }
+        const currentUser = formatUserProfile(meRes.user);
+        setUser(currentUser);
 
-      // 3. Fetch donations
-      const donRes = await api.donations.getAll().catch(() => null);
-      if (donRes?.donations && Array.isArray(donRes.donations)) {
-        setDonations(
-          donRes.donations.map((d: any) => ({
-            id: d._id?.toString() || d.id,
-            donorId: d.donorId?.toString() || 'usr-101',
-            donationDate: d.donationDate,
-            hospitalName: d.hospitalName,
-            location: d.location,
-            bloodGroup: d.bloodGroup,
-            units: d.units || 1,
-            note: d.notes,
-            verified: d.verified ?? true,
-          }))
-        );
+        // 3. Fetch user donations
+        const donRes = await api.donations.getAll().catch(() => null);
+        if (donRes?.donations && Array.isArray(donRes.donations)) {
+          setDonations(
+            donRes.donations.map((d: any) => ({
+              id: d._id?.toString() || d.id,
+              donorId: d.donorId?.toString() || currentUser.id,
+              donationDate: d.donationDate,
+              hospitalName: d.hospitalName,
+              location: d.location,
+              bloodGroup: d.bloodGroup,
+              units: d.units || 1,
+              note: d.notes,
+              verified: d.verified ?? true,
+            }))
+          );
+        } else {
+          setDonations([]);
+        }
+      } else {
+        setUser(null);
+        setDonations([]);
       }
-    } catch (err) {
-      // Fallback gracefully to existing data
+    } catch {
+      // Keep state
     }
   };
 
@@ -310,50 +349,70 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  // Real Login
+  const login = async (identifier: string, pass: string): Promise<UserProfile> => {
+    setIsLoading(true);
+    try {
+      const res = await api.auth.login(identifier, pass);
+      if (!res?.user) {
+        throw new Error('Invalid email/phone or password.');
+      }
+      const formatted = formatUserProfile(res.user);
+      saveUser(formatted);
+      await refreshData();
+      return formatted;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Real Registration
+  const register = async (payload: any): Promise<UserProfile> => {
+    setIsLoading(true);
+    try {
+      const res = await api.auth.register(payload);
+      if (!res?.user) {
+        throw new Error('Registration failed. Please check your information.');
+      }
+      const formatted = formatUserProfile(res.user);
+      saveUser(formatted);
+      await refreshData();
+      return formatted;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Switch demo account
   const loginAs = async (role: 'donor' | 'requester' | 'guest') => {
     if (role === 'guest') {
-      await api.auth.logout().catch(() => null);
-      saveUser(null);
-      showToast('info', 'Logged Out', 'Viewing platform in public guest mode.');
+      await logout();
     } else {
-      const res = await api.auth.demo(role).catch(() => null);
-      if (res?.user) {
-        saveUser({
-          ...res.user,
-          id: res.user.id || res.user._id,
-          avatarInitials: res.user.name.slice(0, 2).toUpperCase(),
-          availabilityStatus: res.user.isAvailable ? 'Available' : 'Unavailable',
-          rolePreference: role === 'donor' ? 'donor' : 'requester',
-        });
-        showToast('success', `Logged in as ${res.user.name}`, `Switched to ${role} session.`);
-      } else {
-        // Fallback local demo
-        if (role === 'donor') {
-          saveUser(INITIAL_USER);
-          showToast('success', 'Logged in as Rahim Ahmed', 'Switched to Donor mode.');
-        } else {
-          saveUser({
-            ...INITIAL_USER,
-            id: 'usr-202',
-            name: 'Tanjil Hasan',
-            email: 'tanjil.hasan@example.com',
-            phone: '+880 1819-234567',
-            bloodGroup: 'B+',
-            rolePreference: 'requester',
-            totalDonations: 2,
-            lastDonationDate: '2025-11-20',
-            nextEligibleDate: '2026-02-20',
-            avatarInitials: 'TH',
-          });
-          showToast('success', 'Logged in as Tanjil Hasan', 'Switched to Requester mode.');
+      setIsLoading(true);
+      try {
+        const res = await api.auth.demo(role);
+        if (res?.user) {
+          const formatted = formatUserProfile(res.user);
+          saveUser(formatted);
+          await refreshData();
+          showToast('success', `Logged in as ${res.user.name}`, `Switched to ${role} session.`);
         }
+      } catch (err: any) {
+        showToast('error', 'Demo Switch Failed', err.message);
+      } finally {
+        setIsLoading(false);
       }
     }
   };
 
   const logout = async () => {
-    await loginAs('guest');
+    try {
+      await api.auth.logout().catch(() => null);
+    } finally {
+      saveUser(null);
+      setDonations([]);
+      showToast('info', 'Logged Out', 'Viewing platform in public guest mode.');
+    }
   };
 
   // When donor contacts requester
@@ -414,6 +473,8 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addDonation,
         updateUserAvailability,
         updateUserProfile,
+        login,
+        register,
         loginAs,
         logout,
         contactRequest,

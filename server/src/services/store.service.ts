@@ -250,10 +250,18 @@ export class StoreService {
     }
     await initMemoryStore();
     const idClean = identifier.trim().toLowerCase();
+    const digitsOnly = idClean.replace(/\D/g, '');
+
     return (
-      memoryUsers.find(
-        (u) => u.email.toLowerCase() === idClean || u.phone.replace(/[\s-]/g, '') === idClean.replace(/[\s-]/g, '')
-      ) || null
+      memoryUsers.find((u) => {
+        if (u.email.toLowerCase() === idClean) return true;
+        const uClean = u.phone.replace(/[\s-]/g, '').toLowerCase();
+        if (uClean === idClean.replace(/[\s-]/g, '')) return true;
+        const uDigits = u.phone.replace(/\D/g, '');
+        if (digitsOnly && uDigits && digitsOnly === uDigits) return true;
+        if (digitsOnly.length >= 10 && uDigits.length >= 10 && digitsOnly.slice(-10) === uDigits.slice(-10)) return true;
+        return false;
+      }) || null
     );
   }
 

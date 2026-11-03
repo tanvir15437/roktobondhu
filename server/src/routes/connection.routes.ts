@@ -16,3 +16,4 @@ router.get('/request/:requestId', authenticate, getRequestConnections);
 router.get('/my', authenticate, getMyConnections);
 
 export default router;
+

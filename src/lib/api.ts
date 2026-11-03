@@ -24,16 +24,28 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
     if (qs) url += `?${qs}`;
   }
 
+  const token = typeof window !== 'undefined' ? localStorage.getItem('roktobondhu_token') : null;
+  const reqHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(headers as Record<string, string>),
+  };
+  if (token && !reqHeaders['Authorization']) {
+    reqHeaders['Authorization'] = `Bearer ${token}`;
+  }
+
   const res = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
+    headers: reqHeaders,
     credentials: 'include', // transmits HTTP-only cookies automatically
     ...rest,
   });
 
   const data = await res.json().catch(() => null);
+
+  if (endpoint.startsWith('/auth/logout') && typeof window !== 'undefined') {
+    localStorage.removeItem('roktobondhu_token');
+  } else if (data?.data?.token && typeof window !== 'undefined') {
+    localStorage.setItem('roktobondhu_token', data.data.token);
+  }
 
   if (!res.ok) {
     const errorMsg = data?.message || data?.errors?.[0]?.message || `Request failed with status ${res.status}`;
@@ -101,3 +113,4 @@ export const api = {
     markAllRead: () => request('/notifications/read-all', { method: 'PATCH' }),
   },
 };
+

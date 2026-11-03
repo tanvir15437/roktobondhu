@@ -10,3 +10,4 @@ export const createDonationSchema = z.object({
     notes: z.string().optional(),
   }),
 });
+

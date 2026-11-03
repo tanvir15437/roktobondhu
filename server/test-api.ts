@@ -3,7 +3,7 @@
  * Tests all models, routes, auth, validation, caching, and business logic
  */
 
-process.env.NODE_ENV = 'test';
+(process.env as any).NODE_ENV = 'test';
 
 import http from 'http';
 import app from './src/server';
