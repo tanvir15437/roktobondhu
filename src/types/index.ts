@@ -1,8 +1,26 @@
 export type BloodGroup = 'A+' | 'A-' | 'B+' | 'B-' | 'O+' | 'O-' | 'AB+' | 'AB-';
 
-export type UrgencyLevel = 'URGENT' | 'TODAY' | 'WITHIN_24H' | 'WITHIN_3_DAYS' | 'SCHEDULED';
+export type UrgencyLevel =
+  | 'URGENT'
+  | 'TODAY'
+  | 'WITHIN_24H'
+  | 'WITHIN_3_DAYS'
+  | 'SCHEDULED'
+  | 'normal'
+  | 'urgent'
+  | 'critical';
 
-export type RequestStatus = 'Active' | 'Partially Fulfilled' | 'Fulfilled' | 'Expired' | 'Cancelled';
+export type RequestStatus =
+  | 'Active'
+  | 'Partially Fulfilled'
+  | 'Fulfilled'
+  | 'Expired'
+  | 'Cancelled'
+  | 'active'
+  | 'partially_fulfilled'
+  | 'fulfilled'
+  | 'expired'
+  | 'cancelled';
 
 export type BangladeshDivision =
   | 'Dhaka'

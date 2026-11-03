@@ -4,35 +4,52 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { usePlatform } from '@/context/PlatformContext';
+import { useToast } from '@/components/ui/Toast';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
-import { Droplets, Lock, Phone, UserCheck, ArrowRight } from 'lucide-react';
+import { Droplets, Lock, Phone, UserCheck, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginAs } = usePlatform();
+  const { loginAs, refreshData } = usePlatform();
+  const { showToast } = useToast();
   const [identifier, setIdentifier] = useState('+880 1712-345678');
   const [password, setPassword] = useState('password123');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      loginAs('donor');
+    setError('');
+    try {
+      const res = await api.auth.login(identifier, password).catch(() => null);
+      if (res?.user) {
+        showToast('success', 'Logged In', `Welcome back, ${res.user.name}!`);
+        await refreshData();
+        router.push('/dashboard');
+      } else {
+        // Fallback for demo
+        await loginAs('donor');
+        router.push('/dashboard');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Invalid credentials');
+      showToast('error', 'Login Failed', err.message);
+    } finally {
       setLoading(false);
-      router.push('/dashboard');
-    }, 400);
+    }
   };
 
-  const handleDemoDonor = () => {
-    loginAs('donor');
+  const handleDemoDonor = async () => {
+    await loginAs('donor');
     router.push('/dashboard');
   };
 
-  const handleDemoRequester = () => {
-    loginAs('requester');
+  const handleDemoRequester = async () => {
+    await loginAs('requester');
     router.push('/dashboard/my-requests');
   };
 
@@ -88,6 +105,13 @@ export default function LoginPage() {
 
         {/* Login Form */}
         <Card className="p-6 sm:p-8 space-y-4">
+          {error && (
+            <div className="p-3 bg-semantic-error-subtle border border-[#F8C8C8] rounded-md flex items-center gap-2 text-12 text-semantic-error">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               label="Phone Number or Email"
@@ -153,4 +177,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

@@ -53,14 +53,16 @@ export const UrgencyBadge: React.FC<UrgencyBadgeProps> = ({
     md: 'h-7 px-3 text-12 font-semibold rounded-md gap-1.5',
   }[size];
 
-  switch (urgency) {
+  const normUrgency = (urgency || '').toUpperCase();
+  switch (normUrgency) {
+    case 'CRITICAL':
     case 'URGENT':
       return (
         <span
           className={`inline-flex items-center bg-semantic-error-subtle text-semantic-error border border-[#F8C8C8] select-none ${sizeClasses} ${className}`}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-semantic-error animate-pulse" />
-          URGENT
+          {normUrgency === 'CRITICAL' ? 'CRITICAL' : 'URGENT'}
         </span>
       );
     case 'TODAY':
@@ -81,11 +83,12 @@ export const UrgencyBadge: React.FC<UrgencyBadgeProps> = ({
         </span>
       );
     case 'WITHIN_3_DAYS':
+    case 'NORMAL':
       return (
         <span
           className={`inline-flex items-center bg-ui-bg text-ink-secondary border border-ui-border select-none ${sizeClasses} ${className}`}
         >
-          Within 3 days
+          {normUrgency === 'NORMAL' ? 'Normal' : 'Within 3 days'}
         </span>
       );
     case 'SCHEDULED':
@@ -117,8 +120,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
     md: 'h-7 px-3 text-12 font-medium rounded-md gap-2',
   }[size];
 
-  switch (status) {
-    case 'Active':
+  const normStatus = (status || '').toLowerCase();
+  switch (normStatus) {
+    case 'active':
       return (
         <span
           className={`inline-flex items-center bg-semantic-success-subtle text-semantic-success border border-[#C7E9D9] select-none ${sizeClasses} ${className}`}
@@ -127,7 +131,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
           Active
         </span>
       );
-    case 'Partially Fulfilled':
+    case 'partially fulfilled':
+    case 'partially_fulfilled':
       return (
         <span
           className={`inline-flex items-center bg-semantic-warning-subtle text-semantic-warning border border-[#FCDCA3] select-none ${sizeClasses} ${className}`}
@@ -136,7 +141,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
           Partially Fulfilled
         </span>
       );
-    case 'Fulfilled':
+    case 'fulfilled':
       return (
         <span
           className={`inline-flex items-center bg-[#EBF8F2] text-semantic-success border border-[#BCE8D3] select-none ${sizeClasses} ${className}`}
@@ -147,7 +152,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
           Fulfilled
         </span>
       );
-    case 'Cancelled':
+    case 'cancelled':
       return (
         <span
           className={`inline-flex items-center bg-semantic-error-subtle text-semantic-error border border-[#F8C8C8] select-none ${sizeClasses} ${className}`}
@@ -155,7 +160,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
           Cancelled
         </span>
       );
-    case 'Expired':
+    case 'expired':
     default:
       return (
         <span

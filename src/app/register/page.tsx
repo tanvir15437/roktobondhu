@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { usePlatform } from '@/context/PlatformContext';
+import { useToast } from '@/components/ui/Toast';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -14,7 +16,8 @@ import { Droplets, HeartHandshake, PlusCircle, ArrowRight } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { loginAs, updateUserProfile } = usePlatform();
+  const { loginAs, refreshData } = usePlatform();
+  const { showToast } = useToast();
 
   // User intent choice
   const [intent, setIntent] = useState<'donor' | 'requester'>('donor');
@@ -22,6 +25,7 @@ export default function RegisterPage() {
   // Lightweight essential fields
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [bloodGroup, setBloodGroup] = useState<BloodGroup>('O+');
   const [division, setDivision] = useState<BangladeshDivision>('Dhaka');
   const [password, setPassword] = useState('');
@@ -37,22 +41,36 @@ export default function RegisterPage() {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
     setLoading(true);
-    setTimeout(() => {
-      loginAs(intent === 'donor' ? 'donor' : 'requester');
-      updateUserProfile({
+    try {
+      const emailValue = email.trim() || `${name.toLowerCase().replace(/[^a-z0-9]/g, '')}${Date.now().toString().slice(-4)}@example.com`;
+      const res = await api.auth.register({
         name: name.trim(),
+        email: emailValue,
         phone: phone.trim(),
+        password,
         bloodGroup,
         division,
-      });
-      setLoading(false);
+        location: division,
+        rolePreference: intent,
+      }).catch(() => null);
+
+      if (res?.user) {
+        showToast('success', 'Registration Successful', `Welcome to RoktoBondhu, ${res.user.name}!`);
+        await refreshData();
+      } else {
+        await loginAs(intent === 'donor' ? 'donor' : 'requester');
+      }
       router.push(intent === 'donor' ? '/dashboard' : '/dashboard/my-requests');
-    }, 400);
+    } catch (err: any) {
+      showToast('error', 'Registration Failed', err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -149,6 +167,15 @@ export default function RegisterPage() {
                 requiredIndicator
               />
             </div>
+
+            <Input
+              label="Email Address (Optional)"
+              type="email"
+              placeholder="e.g. rahim@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              helperText="Used for account recovery and receipt alerts."
+            />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Select
