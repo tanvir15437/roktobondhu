@@ -22,15 +22,27 @@ const toSafeUser = (user: any) => {
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, phone, password, bloodGroup, division, location, dateOfBirth } = req.body;
+    const { name, email, phone, password, bloodGroup, division, location, dateOfBirth, rolePreference } = req.body;
 
-    const existingEmail = await StoreService.findUserByEmailOrPhone(email);
-    if (existingEmail) {
-      errorResponse(res, 'An account with this email address already exists.', 409);
+    console.log(`[Auth] Registration request received: phone=${phone}, email=${email}`);
+
+    const cleanEmail = email ? email.toLowerCase().trim() : '';
+    const cleanPhone = phone ? phone.trim() : '';
+
+    if (!cleanPhone) {
+      errorResponse(res, 'Phone number is required.', 400);
       return;
     }
 
-    const existingPhone = await StoreService.findUserByEmailOrPhone(phone);
+    if (cleanEmail) {
+      const existingEmail = await StoreService.findUserByEmailOrPhone(cleanEmail);
+      if (existingEmail) {
+        errorResponse(res, 'An account with this email address already exists.', 409);
+        return;
+      }
+    }
+
+    const existingPhone = await StoreService.findUserByEmailOrPhone(cleanPhone);
     if (existingPhone) {
       errorResponse(res, 'An account with this phone number already exists.', 409);
       return;
@@ -40,13 +52,13 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const initialEligibility = calculateEligibility(null);
 
     const user = await StoreService.createUser({
-      name,
-      email: email.toLowerCase(),
-      phone,
+      name: name ? name.trim() : 'Anonymous Donor',
+      email: cleanEmail || `${cleanPhone.replace(/\D/g, '')}@roktobondhu.org`,
+      phone: cleanPhone,
       passwordHash,
       bloodGroup,
-      division,
-      location,
+      division: division || 'Dhaka',
+      location: location || division || 'Dhaka',
       dateOfBirth: dateOfBirth || '',
       role: 'user',
       isAvailable: true,
@@ -61,15 +73,28 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       },
     });
 
+    const userId = (user._id || user.id || '').toString();
     const token = signToken({
-      userId: user._id.toString(),
-      role: user.role,
+      userId,
+      role: user.role || 'user',
       email: user.email,
     });
 
     setAuthCookie(res, token);
+    console.log(`[Auth] User registered successfully: ${user.name} (ID: ${userId})`);
     successResponse(res, { user: toSafeUser(user), token }, 'Registration successful! Welcome to RoktoBondhu.', 201);
   } catch (error: any) {
+    console.error('[Registration Error Details]', error);
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue || {})[0] || 'field';
+      errorResponse(res, `An account with this ${field} already exists.`, 409);
+      return;
+    }
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors || {}).map((val: any) => val.message);
+      errorResponse(res, 'Validation error', 400, messages);
+      return;
+    }
     errorResponse(res, error.message || 'Registration failed', 500);
   }
 };

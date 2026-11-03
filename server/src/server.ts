@@ -69,10 +69,18 @@ export const startServer = async () => {
   console.log('--------------------------------------------------');
 
   // Start HTTP listener immediately so server is instantly ready
-  const server = app.listen(ENV.PORT, () => {
-    console.log(`[RoktoBondhu API] Running on http://localhost:${ENV.PORT}`);
-    console.log(`[Health Check]   http://localhost:${ENV.PORT}/api/health`);
+  const server = app.listen(ENV.PORT, '0.0.0.0', () => {
+    console.log(`[RoktoBondhu API] Running on http://127.0.0.1:${ENV.PORT}`);
+    console.log(`[Health Check]   http://127.0.0.1:${ENV.PORT}/api/health`);
     console.log('--------------------------------------------------');
+  });
+
+  server.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn(`[RoktoBondhu API] Port ${ENV.PORT} is already in use. Existing instance is active.`);
+    } else {
+      console.error('[RoktoBondhu API] Server error:', err.message);
+    }
   });
 
   // Initialize Cache & Database in parallel

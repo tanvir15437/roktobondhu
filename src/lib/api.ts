@@ -48,7 +48,14 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
   }
 
   if (!res.ok) {
-    const errorMsg = data?.message || data?.errors?.[0]?.message || `Request failed with status ${res.status}`;
+    let errorMsg = data?.message || data?.errors?.[0]?.message;
+    if (!errorMsg) {
+      if (res.status === 500) {
+        errorMsg = 'Backend server (port 5000) is unreachable. Please run "npm run dev" to ensure both frontend and backend servers are running.';
+      } else {
+        errorMsg = `Request failed with status ${res.status}`;
+      }
+    }
     throw new Error(errorMsg);
   }
 

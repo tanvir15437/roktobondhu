@@ -89,6 +89,30 @@ async function runTests() {
     results.push({ name: '1. Health check returns 200 OK', passed: false, error: err.message });
   }
 
+  // TEST 1.5: Register a new user
+  try {
+    const regRes = await request('/api/auth/register', {
+      method: 'POST',
+      body: {
+        name: 'Test New Donor',
+        email: `newdonor_${Date.now()}@example.com`,
+        phone: `+880 1999-${Math.floor(100000 + Math.random() * 900000)}`,
+        password: 'password123',
+        bloodGroup: 'AB+',
+        division: 'Chattogram',
+        location: 'Chattogram',
+        rolePreference: 'donor',
+      },
+    });
+    if (regRes.status === 201 && regRes.body.data?.user?.name === 'Test New Donor') {
+      results.push({ name: '2. POST /api/auth/register creates new account with JWT and cookie', passed: true });
+    } else {
+      results.push({ name: '2. POST /api/auth/register creates new account', passed: false, error: JSON.stringify(regRes.body) });
+    }
+  } catch (err: any) {
+    results.push({ name: '2. POST /api/auth/register creates new account', passed: false, error: err.message });
+  }
+
   // TEST 2: Demo login as Donor (Rahim Ahmed)
   try {
     const res = await request('/api/auth/demo/donor', { method: 'POST' });
@@ -98,12 +122,12 @@ async function runTests() {
       if (setCookie && setCookie.length > 0) {
         testAuthCookie = setCookie[0].split(';')[0];
       }
-      results.push({ name: '2. Demo login sets HTTP-only cookie & returns JWT', passed: true });
+      results.push({ name: '3. Demo login sets HTTP-only cookie & returns JWT', passed: true });
     } else {
-      results.push({ name: '2. Demo login sets HTTP-only cookie & returns JWT', passed: false, error: JSON.stringify(res.body) });
+      results.push({ name: '3. Demo login sets HTTP-only cookie & returns JWT', passed: false, error: JSON.stringify(res.body) });
     }
   } catch (err: any) {
-    results.push({ name: '2. Demo login sets HTTP-only cookie & returns JWT', passed: false, error: err.message });
+    results.push({ name: '3. Demo login sets HTTP-only cookie & returns JWT', passed: false, error: err.message });
   }
 
   // TEST 3: Auth verification via /api/auth/me
