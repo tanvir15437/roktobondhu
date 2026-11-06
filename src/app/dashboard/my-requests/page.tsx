@@ -43,21 +43,7 @@ export default function MyRequestsPage() {
   // Active modal state for Viewing Contacted Donors
   const [viewingDonorsReq, setViewingDonorsReq] = useState<BloodRequest | null>(null);
 
-  if (!user) {
-    return (
-      <div className="py-16 max-w-xl mx-auto px-4 text-center">
-        <h2 className="text-24 font-bold text-ink-primary mb-2">My Requests</h2>
-        <p className="text-14 text-ink-secondary mb-6">
-          Sign in or switch to Tanjil Hasan (Requester) demo persona to view and manage your posted requests.
-        </p>
-        <Link href="/login">
-          <Button variant="primary" size="md">
-            Sign In
-          </Button>
-        </Link>
-      </div>
-    );
-  }
+  if (!user) return null;
 
   // Filter requests that belong to user
   const myRequests = requests.filter(
@@ -83,8 +69,7 @@ export default function MyRequestsPage() {
   };
 
   return (
-    <div className="py-8 sm:py-12 bg-ui-bg min-h-screen">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-8">
+    <div className="max-w-6xl mx-auto space-y-8">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-ui-border">
           <div>
@@ -199,7 +184,6 @@ export default function MyRequestsPage() {
             </Card>
           ))}
         </div>
-      </div>
 
       {/* Edit Request Modal */}
       {editingRequest && (

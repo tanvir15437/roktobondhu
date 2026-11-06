@@ -17,70 +17,26 @@ import {
   Clock,
   LogOut,
   FileText,
-  UserCheck,
+  LayoutDashboard,
+  ArrowRight,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
-  const { user, setCreateModalOpen, loginAs, logout } = usePlatform();
+  const { user, setCreateModalOpen, logout } = usePlatform();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
+  // Clean consumer navigation links for the public website
   const navLinks = [
     { label: 'Find Blood', href: '/requests' },
-    { label: 'Donor Dashboard', href: '/dashboard' },
-    { label: 'My Donations', href: '/dashboard/donations' },
     { label: 'How It Works', href: '/#how-it-works' },
+    { label: 'Why Donate', href: '/#why-donate' },
+    { label: 'Impact', href: '/#impact' },
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-ui-surface/95 backdrop-blur-sm border-b border-ui-border">
-      {/* Demo Persona Switcher Banner (Subtle Top Bar for testing Phase 1 effortlessly) */}
-      <div className="bg-brand-subtle border-b border-brand-light/70 py-1 px-4 text-12 text-ink-secondary">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-brand-primary">Phase 1 Prototype Demo:</span>
-            <span className="hidden sm:inline">Active Mode:</span>
-            <span className="font-bold text-ink-primary">
-              {user ? `${user.name} (${user.rolePreference === 'both' ? 'Donor & Requester' : user.rolePreference})` : 'Guest Visitor'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-12 text-ink-muted hidden md:inline">Quick Switch:</span>
-            <button
-              onClick={() => loginAs('donor')}
-              className={`px-2 py-0.5 rounded-sm text-12 font-medium transition-colors ${
-                user?.id === 'usr-101'
-                  ? 'bg-brand-primary text-white font-semibold'
-                  : 'bg-ui-surface text-ink-secondary hover:text-ink-primary border border-ui-border'
-              }`}
-            >
-              Donor (Rahim)
-            </button>
-            <button
-              onClick={() => loginAs('requester')}
-              className={`px-2 py-0.5 rounded-sm text-12 font-medium transition-colors ${
-                user?.id === 'usr-202'
-                  ? 'bg-brand-primary text-white font-semibold'
-                  : 'bg-ui-surface text-ink-secondary hover:text-ink-primary border border-ui-border'
-              }`}
-            >
-              Requester (Tanjil)
-            </button>
-            <button
-              onClick={() => loginAs('guest')}
-              className={`px-2 py-0.5 rounded-sm text-12 font-medium transition-colors ${
-                !user
-                  ? 'bg-brand-primary text-white font-semibold'
-                  : 'bg-ui-surface text-ink-secondary hover:text-ink-primary border border-ui-border'
-              }`}
-            >
-              Guest (Logged Out)
-            </button>
-          </div>
-        </div>
-      </div>
-
+    <header className="sticky top-0 z-40 bg-ui-surface/95 backdrop-blur-md border-b border-ui-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-2.5 group select-none">
@@ -117,7 +73,7 @@ export const Navbar: React.FC = () => {
           })}
         </nav>
 
-        {/* Desktop Action Buttons */}
+        {/* Desktop Actions */}
         <div className="hidden sm:flex items-center gap-3">
           <Button
             variant="primary"
@@ -129,10 +85,11 @@ export const Navbar: React.FC = () => {
           </Button>
 
           {user ? (
+            /* Logged-In User Profile Dropdown */
             <div className="relative">
               <button
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="flex items-center gap-2 p-1.5 rounded-md hover:bg-ui-bg border border-ui-border transition-colors"
+                className="flex items-center gap-2.5 p-1.5 pr-2.5 rounded-full hover:bg-ui-bg border border-ui-border transition-all shadow-subtle"
                 aria-expanded={userDropdownOpen}
               >
                 <Avatar
@@ -140,86 +97,99 @@ export const Navbar: React.FC = () => {
                   size="sm"
                   availabilityStatus={user.availabilityStatus}
                 />
-                <div className="hidden lg:flex flex-col text-left">
-                  <span className="text-14 font-semibold text-ink-primary leading-tight">
+                <div className="flex flex-col text-left">
+                  <span className="text-13 font-semibold text-ink-primary leading-tight">
                     {user.name.split(' ')[0]}
                   </span>
-                  <span className="text-12 text-ink-secondary leading-tight">
-                    {user.bloodGroup} · {user.availabilityStatus}
+                  <span className="text-11 font-medium text-brand-primary leading-tight">
+                    Group {user.bloodGroup}
                   </span>
                 </div>
-                <ChevronDown className="w-4 h-4 text-ink-muted" />
+                <ChevronDown className="w-3.5 h-3.5 text-ink-muted ml-0.5" />
               </button>
 
-              {/* Dropdown Menu */}
               {userDropdownOpen && (
                 <>
                   <div
                     className="fixed inset-0 z-20"
                     onClick={() => setUserDropdownOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-56 bg-ui-surface rounded-lg border border-ui-border shadow-dropdown p-1.5 z-30 animate-in fade-in zoom-in-95 duration-100">
-                    <div className="px-3 py-2 border-b border-ui-border mb-1">
-                      <p className="text-14 font-bold text-ink-primary">{user.name}</p>
-                      <p className="text-12 text-ink-secondary">{user.email}</p>
-                      <span className="inline-block mt-1 px-1.5 py-0.5 bg-brand-light text-brand-primary text-12 font-semibold rounded-sm">
-                        Group: {user.bloodGroup}
-                      </span>
+                  <div className="absolute right-0 mt-2 w-64 bg-ui-surface rounded-lg border border-ui-border shadow-dropdown p-2 z-30 animate-in fade-in zoom-in-95 duration-100">
+                    {/* User Mini Profile Header */}
+                    <div className="p-3 bg-ui-bg rounded-md mb-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-14 font-bold text-ink-primary truncate max-w-[150px]">
+                          {user.name}
+                        </p>
+                        <span className="px-2 py-0.5 bg-brand-light text-brand-primary text-12 font-bold rounded-sm">
+                          {user.bloodGroup}
+                        </span>
+                      </div>
+                      <p className="text-12 text-ink-secondary truncate mt-0.5">
+                        {user.phone || user.email}
+                      </p>
                     </div>
 
+                    {/* Prominent Go to Dashboard CTA */}
                     <Link
                       href="/dashboard"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-14 text-ink-primary hover:bg-ui-bg rounded-md"
+                      className="flex items-center justify-between px-3 py-2.5 mb-1.5 rounded-md bg-brand-primary text-white text-13 font-semibold shadow-subtle hover:bg-brand-dark transition-colors"
                     >
-                      <HeartHandshake className="w-4 h-4 text-brand-primary" />
-                      Donor Dashboard
+                      <div className="flex items-center gap-2">
+                        <LayoutDashboard className="w-4 h-4 text-white" />
+                        <span>Go to Dashboard</span>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 text-white/80" />
+                    </Link>
+
+                    {/* Secondary Portal Links */}
+                    <Link
+                      href="/dashboard/my-requests"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 text-13 font-medium text-ink-secondary hover:text-ink-primary hover:bg-ui-bg rounded-md transition-colors"
+                    >
+                      <FileText className="w-4 h-4 text-brand-primary" />
+                      <span>My Requests</span>
                     </Link>
 
                     <Link
                       href="/dashboard/donations"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-14 text-ink-primary hover:bg-ui-bg rounded-md"
+                      className="flex items-center gap-2.5 px-3 py-2 text-13 font-medium text-ink-secondary hover:text-ink-primary hover:bg-ui-bg rounded-md transition-colors"
                     >
-                      <Clock className="w-4 h-4 text-brand-primary" />
-                      Donation History
-                    </Link>
-
-                    <Link
-                      href="/dashboard/my-requests"
-                      onClick={() => setUserDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-14 text-ink-primary hover:bg-ui-bg rounded-md"
-                    >
-                      <FileText className="w-4 h-4 text-brand-primary" />
-                      My Requests
+                      <HeartHandshake className="w-4 h-4 text-brand-primary" />
+                      <span>Donation History</span>
                     </Link>
 
                     <Link
                       href="/dashboard/profile"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 text-14 text-ink-primary hover:bg-ui-bg rounded-md"
+                      className="flex items-center gap-2.5 px-3 py-2 text-13 font-medium text-ink-secondary hover:text-ink-primary hover:bg-ui-bg rounded-md transition-colors"
                     >
                       <User className="w-4 h-4 text-brand-primary" />
-                      Profile & Settings
+                      <span>Profile & Settings</span>
                     </Link>
 
-                    <div className="border-t border-ui-border my-1" />
+                    <div className="border-t border-ui-border my-1.5" />
 
+                    {/* Sign Out */}
                     <button
                       onClick={() => {
                         setUserDropdownOpen(false);
                         logout();
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-14 text-semantic-error hover:bg-semantic-error-subtle rounded-md text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-13 font-medium text-semantic-error hover:bg-semantic-error-subtle rounded-md transition-colors text-left"
                     >
                       <LogOut className="w-4 h-4" />
-                      Sign Out
+                      <span>Sign Out</span>
                     </button>
                   </div>
                 </>
               )}
             </div>
           ) : (
+            /* Logged-Out Public Visitors */
             <div className="flex items-center gap-2">
               <Link href="/login">
                 <Button variant="outline" size="md">
@@ -256,7 +226,28 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="sm:hidden border-t border-ui-border bg-ui-surface p-4 space-y-3 animate-in slide-in-from-top-2">
+        <div className="sm:hidden border-t border-ui-border bg-ui-surface p-4 space-y-4 animate-in slide-in-from-top-2">
+          {/* If Logged In, show top profile card with Go to Dashboard button */}
+          {user && (
+            <div className="p-3 bg-brand-subtle rounded-lg border border-brand-light flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <Avatar initials={user.avatarInitials} size="md" />
+                <div>
+                  <p className="text-14 font-bold text-ink-primary">{user.name}</p>
+                  <p className="text-12 text-ink-secondary font-medium">Group {user.bloodGroup}</p>
+                </div>
+              </div>
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-1.5 bg-brand-primary text-white text-12 font-semibold rounded-md shadow-subtle"
+              >
+                Dashboard
+              </Link>
+            </div>
+          )}
+
+          {/* Navigation Links */}
           <nav className="flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link
@@ -272,36 +263,29 @@ export const Navbar: React.FC = () => {
                 {link.label}
               </Link>
             ))}
-            {user && (
-              <>
-                <Link
-                  href="/dashboard/my-requests"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="px-3 py-2 rounded-md text-14 font-medium text-ink-secondary hover:bg-ui-bg"
-                >
-                  My Requests
-                </Link>
-                <Link
-                  href="/dashboard/profile"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="px-3 py-2 rounded-md text-14 font-medium text-ink-secondary hover:bg-ui-bg"
-                >
-                  Profile & Settings
-                </Link>
-              </>
-            )}
           </nav>
 
-          <div className="pt-3 border-t border-ui-border flex flex-col gap-2">
+          {/* Actions */}
+          <div className="pt-3 border-t border-ui-border">
             {user ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Avatar initials={user.avatarInitials} size="sm" />
-                  <span className="text-14 font-semibold text-ink-primary">{user.name}</span>
-                </div>
-                <Button variant="ghost" size="sm" onClick={logout}>
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-brand-primary text-white font-semibold rounded-md text-14"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Go to Dashboard</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    logout();
+                  }}
+                  className="w-full py-2 text-center text-13 font-medium text-semantic-error hover:bg-semantic-error-subtle rounded-md"
+                >
                   Sign Out
-                </Button>
+                </button>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2">
@@ -323,4 +307,3 @@ export const Navbar: React.FC = () => {
     </header>
   );
 };
-

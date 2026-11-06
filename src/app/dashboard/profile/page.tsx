@@ -40,21 +40,7 @@ export default function ProfilePage() {
   const [hidePhone, setHidePhone] = useState(user?.settings.hidePhoneUntilContact ?? false);
   const [showInDirectory, setShowInDirectory] = useState(user?.settings.showInDonorDirectory ?? true);
 
-  if (!user) {
-    return (
-      <div className="py-16 max-w-xl mx-auto px-4 text-center">
-        <h2 className="text-24 font-bold text-ink-primary mb-2">Profile & Settings</h2>
-        <p className="text-14 text-ink-secondary mb-6">
-          Sign in to manage your donor profile and communication settings.
-        </p>
-        <Link href="/login">
-          <Button variant="primary" size="md">
-            Sign In
-          </Button>
-        </Link>
-      </div>
-    );
-  }
+  if (!user) return null;
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,8 +62,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="py-8 sm:py-12 bg-ui-bg min-h-screen">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div className="pb-6 border-b border-ui-border">
           <div className="flex items-center gap-2 text-12 font-bold text-brand-primary uppercase tracking-wider mb-1">
@@ -273,7 +258,6 @@ export default function ProfilePage() {
           </div>
         </form>
       </div>
-    </div>
   );
 }
 

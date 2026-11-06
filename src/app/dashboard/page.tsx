@@ -25,27 +25,7 @@ export default function DonorDashboardPage() {
   const { user, requests, updateUserAvailability, setCreateModalOpen } = usePlatform();
   const [isAddDonationOpen, setAddDonationOpen] = useState(false);
 
-  // If user is logged out in the prototype, provide demo quick login prompt
-  if (!user) {
-    return (
-      <div className="py-16 max-w-xl mx-auto px-4 text-center">
-        <div className="w-12 h-12 rounded-lg bg-brand-light text-brand-primary flex items-center justify-center mx-auto mb-4">
-          <Heart className="w-6 h-6" />
-        </div>
-        <h2 className="text-24 font-bold text-ink-primary mb-2">Donor Dashboard Access</h2>
-        <p className="text-14 text-ink-secondary mb-6">
-          Sign in or switch to the Rahim Ahmed demo account to explore the donor dashboard.
-        </p>
-        <div className="flex justify-center gap-3">
-          <Link href="/login">
-            <Button variant="primary" size="md">
-              Sign In to Your Account
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  if (!user) return null;
 
   // Get matching requests based on donor blood group compatibility
   const compatibleGroups = COMPATIBLE_RECIPIENTS[user.bloodGroup] || [user.bloodGroup];
@@ -61,8 +41,7 @@ export default function DonorDashboardPage() {
   };
 
   return (
-    <div className="py-8 sm:py-12 bg-ui-bg min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8">
         {/* ========================================================= */}
         {/* TOP WELCOME & ELIGIBILITY BANNER                          */}
         {/* ========================================================= */}
@@ -237,14 +216,13 @@ export default function DonorDashboardPage() {
             <strong className="text-ink-primary">Medical Disclaimer:</strong> Next eligible donation date calculation is an informational estimation based on the standard 90-day recovery interval. Actual donation eligibility is subject to clinical on-site screening (blood pressure, hemoglobin test, medical history) performed by certified doctors at the blood donation center.
           </div>
         </div>
-      </div>
 
-      {/* Add Donation Modal */}
-      <AddDonationModal
-        isOpen={isAddDonationOpen}
-        onClose={() => setAddDonationOpen(false)}
-      />
-    </div>
-  );
-}
+        {/* Add Donation Modal */}
+        <AddDonationModal
+          isOpen={isAddDonationOpen}
+          onClose={() => setAddDonationOpen(false)}
+        />
+      </div>
+    );
+  }
 

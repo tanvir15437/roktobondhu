@@ -2,8 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ToastProvider } from '@/components/ui/Toast';
 import { PlatformProvider } from '@/context/PlatformContext';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
+import { AppShell } from '@/components/layout/AppShell';
 import { CreateRequestModal } from '@/components/modals/CreateRequestModal';
 import { RequestDetailModal } from '@/components/modals/RequestDetailModal';
 import { ContactRequesterModal } from '@/components/modals/ContactRequesterModal';
@@ -24,9 +23,7 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col bg-ui-bg text-ink-primary antialiased font-sans">
         <ToastProvider>
           <PlatformProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
+            <AppShell>{children}</AppShell>
             {/* Global interactive modals */}
             <CreateRequestModal />
             <RequestDetailModal />

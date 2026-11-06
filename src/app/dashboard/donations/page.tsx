@@ -23,28 +23,14 @@ export default function MyDonationsPage() {
   const { user, donations } = usePlatform();
   const [isAddDonationOpen, setAddDonationOpen] = useState(false);
 
-  if (!user) {
-    return (
-      <div className="py-16 max-w-xl mx-auto px-4 text-center">
-        <h2 className="text-24 font-bold text-ink-primary mb-2">My Donations Tracker</h2>
-        <p className="text-14 text-ink-secondary mb-6">
-          Sign in to view your blood donation timeline and personal badges.
-        </p>
-        <Link href="/login">
-          <Button variant="primary" size="md">
-            Sign In
-          </Button>
-        </Link>
-      </div>
-    );
-  }
+  if (!user) return null;
 
   // Filter donations for the current donor
   const userDonations = donations.filter((d) => d.donorId === user.id);
 
   return (
-    <div className="py-8 sm:py-12 bg-ui-bg min-h-screen">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-8">
+    <>
+      <div className="max-w-5xl mx-auto space-y-8">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-ui-border">
           <div>
@@ -178,7 +164,7 @@ export default function MyDonationsPage() {
         isOpen={isAddDonationOpen}
         onClose={() => setAddDonationOpen(false)}
       />
-    </div>
+    </>
   );
 }
 
