@@ -16,6 +16,8 @@ export interface IUser extends Document {
   lastDonationDate?: string;
   nextEligibleDate?: string;
   totalDonations: number;
+  resetPasswordOtp?: string;
+  resetPasswordExpires?: Date;
   settings: {
     smsUrgentAlerts: boolean;
     emailDigest: boolean;
@@ -100,6 +102,14 @@ const UserSchema = new Schema<IUser>(
     totalDonations: {
       type: Number,
       default: 0,
+    },
+    resetPasswordOtp: {
+      type: String,
+      default: null,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
     },
     settings: {
       smsUrgentAlerts: { type: Boolean, default: true },

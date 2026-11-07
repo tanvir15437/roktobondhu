@@ -183,3 +183,88 @@ export const demoLogin = async (req: Request, res: Response): Promise<void> => {
     errorResponse(res, error.message, 500);
   }
 };
+
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { identifier } = req.body;
+    const user = await StoreService.findUserByEmailOrPhone(identifier);
+
+    if (!user) {
+      errorResponse(res, 'No account found with this phone number or email address.', 404);
+      return;
+    }
+
+    // Generate secure 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes validity
+
+    const userId = (user._id || user.id).toString();
+    await StoreService.updateUser(userId, {
+      resetPasswordOtp: otp,
+      resetPasswordExpires: expires,
+    });
+
+    console.log(`--------------------------------------------------`);
+    console.log(`[PASSWORD RESET OTP]`);
+    console.log(`User: ${user.name} | Identifier: ${identifier}`);
+    console.log(`OTP Code: ${otp} (Valid for 10 minutes)`);
+    console.log(`--------------------------------------------------`);
+
+    successResponse(
+      res,
+      {
+        identifier,
+        phone: user.phone,
+        email: user.email,
+        demoOtp: otp, // surfaced for development & instant testing without paid SMS gateway
+        expiresIn: '10 minutes',
+      },
+      `A 6-digit recovery code has been generated. Use code ${otp} to verify.`
+    );
+  } catch (error: any) {
+    errorResponse(res, error.message || 'Failed to process password recovery request', 500);
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { identifier, otp, newPassword } = req.body;
+    const user = await StoreService.findUserByEmailOrPhone(identifier);
+
+    if (!user) {
+      errorResponse(res, 'Account not found.', 404);
+      return;
+    }
+
+    if (!user.resetPasswordOtp || user.resetPasswordOtp !== otp.trim()) {
+      errorResponse(res, 'Invalid verification code. Please check the code and try again.', 400);
+      return;
+    }
+
+    if (user.resetPasswordExpires && new Date() > new Date(user.resetPasswordExpires)) {
+      errorResponse(res, 'Verification code has expired. Please request a new one.', 400);
+      return;
+    }
+
+    // Hash the new password securely
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const userId = (user._id || user.id).toString();
+
+    await StoreService.updateUser(userId, {
+      passwordHash,
+      resetPasswordOtp: null,
+      resetPasswordExpires: null,
+    });
+
+    console.log(`[Password Reset Success] Password updated for ${user.name} (${user.phone})`);
+
+    successResponse(
+      res,
+      null,
+      'Your password has been successfully updated! You can now sign in with your new password.'
+    );
+  } catch (error: any) {
+    errorResponse(res, error.message || 'Failed to reset password', 500);
+  }
+};
+

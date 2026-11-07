@@ -55,3 +55,17 @@ export const updateProfileSchema = z.object({
   }),
 });
 
+export const forgotPasswordSchema = z.object({
+  body: z.object({
+    identifier: z.string().min(3, 'Phone number or email is required'),
+  }),
+});
+
+export const resetPasswordSchema = z.object({
+  body: z.object({
+    identifier: z.string().min(3, 'Phone number or email is required'),
+    otp: z.string().min(6, '6-digit verification code is required').max(6, 'Verification code must be 6 digits'),
+    newPassword: z.string().min(6, 'New password must be at least 6 characters'),
+  }),
+});
+

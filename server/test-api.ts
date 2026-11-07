@@ -286,6 +286,42 @@ async function runTests() {
     results.push({ name: '10. PATCH /api/users/availability toggles', passed: false, error: err.message });
   }
 
+  // TEST 11: Password Recovery OTP Generation
+  let recoveryOtp = '';
+  try {
+    const res = await request('/api/auth/forgot-password', {
+      method: 'POST',
+      body: { identifier: '+880 1712-345678' },
+    });
+    if (res.status === 200 && res.body.data?.demoOtp) {
+      recoveryOtp = res.body.data.demoOtp;
+      results.push({ name: '11. POST /api/auth/forgot-password generates recovery OTP', passed: true });
+    } else {
+      results.push({ name: '11. POST /api/auth/forgot-password generates recovery OTP', passed: false, error: JSON.stringify(res.body) });
+    }
+  } catch (err: any) {
+    results.push({ name: '11. POST /api/auth/forgot-password generates recovery OTP', passed: false, error: err.message });
+  }
+
+  // TEST 12: Password Reset with OTP
+  try {
+    const res = await request('/api/auth/reset-password', {
+      method: 'POST',
+      body: {
+        identifier: '+880 1712-345678',
+        otp: recoveryOtp,
+        newPassword: 'newPassword2026!',
+      },
+    });
+    if (res.status === 200 && res.body.success === true) {
+      results.push({ name: '12. POST /api/auth/reset-password updates password with OTP', passed: true });
+    } else {
+      results.push({ name: '12. POST /api/auth/reset-password updates password', passed: false, error: JSON.stringify(res.body) });
+    }
+  } catch (err: any) {
+    results.push({ name: '12. POST /api/auth/reset-password updates password', passed: false, error: err.message });
+  }
+
   // SUMMARY
   console.log('--------------------------------------------------');
   results.forEach((r) => {

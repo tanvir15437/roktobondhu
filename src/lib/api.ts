@@ -72,6 +72,10 @@ export const api = {
     me: () => request('/auth/me', { method: 'GET' }),
     demo: (role: 'donor' | 'requester') =>
       request(`/auth/demo/${role}`, { method: 'POST' }),
+    forgotPassword: (identifier: string) =>
+      request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ identifier }) }),
+    resetPassword: (payload: { identifier: string; otp: string; newPassword: string }) =>
+      request('/auth/reset-password', { method: 'POST', body: JSON.stringify(payload) }),
   },
 
   requests: {
